@@ -1,0 +1,227 @@
+# -*- coding: utf-8 -*-
+"""
+Generates data/posts.json from the same 44-post content plan used to build
+YouthsToday_Content_Calendar_Sep-Dec2026.xlsx.
+
+Run this once now, and again any time the content plan changes:
+    python3 scripts/build_posts_json.py
+
+Each entry's "image" field points to images/<date>.jpg. Only the four
+September dates have a graphic checked in right now — everything else is
+null until Jazz (or Claude, in a future session) designs and drops in a
+1080x1080 JPEG named images/<date>.jpg. The poster script skips (and loudly
+logs) any date whose image file is missing, rather than posting a caption
+with no picture or crashing the whole run.
+"""
+import json
+import datetime
+
+BASE_TAGS = "#YouthsToday #ResourcefulCreator"
+
+# Each entry: date(YYYY-MM-DD), theme, title, caption, hashtags, format_idea
+POSTS = [
+("2026-09-21", "Resourceful Basics", "Your phone IS your camera",
+ "Stop waiting for a \"proper\" camera. The phone in your hand shoots better video than most creators used five years ago. Clean the lens, shoot in good light, and hit record — the gear was never the excuse. What's stopped you from posting today?",
+ "#ContentCreatorTips #ContentCreation #SmallCreator",
+ "Talking-head Reel/TikTok, on-screen text: \"You already have everything you need\""),
+("2026-09-23", "Resourceful Basics", "Skip the ring light — use a window",
+ "The best lighting kit you own doesn't need batteries: it's your nearest window. Face it, not your back, and you get soft, flattering light for free. Try it for your next post and tag us — we want to see the glow-up.",
+ "#ContentHacks #CreatorTips #BudgetContentCreation",
+ "Before/after carousel: ring light shot vs. window-light shot"),
+("2026-09-25", "Resourceful Basics", "The stack-of-books tripod",
+ "No tripod? No problem. A stack of books, a mug, or a phone stand from your junk drawer all do the job. Resourceful creators don't wait for the \"right\" tools — they build with what's already on the table.",
+ "#DIYCreator #ContentHacks #SmallCreator",
+ "Quick TikTok demo: 3 household tripod hacks in 15 seconds"),
+("2026-09-28", "Resourceful Basics", "Batch a week in one sitting",
+ "Filming every day is how burnout starts. Block two hours, film a week's worth of content back-to-back, and spend the rest of your week actually living your life. Future-you will thank present-you.",
+ "#ContentPlanning #CreatorLife #ContentCreatorTips",
+ "Carousel: \"How to batch-film 3-5 posts in one afternoon\""),
+("2026-09-30", "Resourceful Basics", "3 free apps every creator needs",
+ "You don't need a paid subscription to edit like a pro. CapCut for video, Canva for graphics, InShot for quick trims — all free, all powerful. Save this post for the next time you're building your kit.",
+ "#FreeTools #ContentCreation #CreatorTips",
+ "Static graphic: app icons + one-line use-case each, \"save this\" CTA"),
+("2026-10-02", "Work Smarter", "1 long video = 5 short clips",
+ "That 10-minute video you filmed once? It's actually five posts. Cut it into moments — a hook, a tip, a laugh, a result, a CTA — and you've got a week of content from a single shoot.",
+ "#ContentRepurposing #ContentHacks #CreatorEconomy",
+ "Carousel showing 1 source video split into 5 labeled clip thumbnails"),
+("2026-10-05", "Work Smarter", "Build a swipe file of hooks",
+ "Every time a video stops your scroll, screenshot the first line. In a month you'll have a personal library of hooks that already work — no more staring at a blank caption box.",
+ "#CreatorTips #ContentPlanning #DigitalCreator",
+ "Reel: screen-recording a \"hooks\" folder being built, on-screen tip text"),
+("2026-10-07", "Work Smarter", "Trending sounds = free reach",
+ "The algorithm rewards trending audio — and it costs you nothing. Spend two minutes in the app's sound library before you post, not after. Small habit, real difference in your reach.",
+ "#CreatorGrowth #ContentHacks #TikTokTips",
+ "TikTok: quick tutorial pointing at the discover/sounds tab"),
+("2026-10-09", "Work Smarter", "Your comments are a content goldmine",
+ "Scroll your comments before you scroll for inspiration. Every question people ask you is a post you haven't made yet. Resourceful creators don't guess what their audience wants — they read it, for free.",
+ "#ContentCreatorTips #CreatorCommunitySEA #ContentPlanning",
+ "Carousel: 3 real comment questions turned into 3 post ideas"),
+("2026-10-12", "Work Smarter", "1 caption, 3 different hooks",
+ "You don't need a new idea for every post — you need a new opening line. Take one caption and rewrite the first sentence three ways: a question, a bold claim, a mini-story. Same message, triple the mileage.",
+ "#CreatorTips #ContentHacks #ContentCreation",
+ "Static graphic: 1 caption body + 3 swappable hook lines"),
+("2026-10-14", "Work Smarter", "Subtitles double your watch time",
+ "Most people watch with the sound off. Free, built-in auto-captions on every major app take 30 seconds to add and keep viewers watching longer. If you're skipping this step, you're leaving views on the table.",
+ "#ContentHacks #CreatorGrowth #DigitalCreator",
+ "Reel: side-by-side captioned vs. uncaptioned watch-through"),
+("2026-10-16", "Work Smarter", "Golden hour: the free cinematic filter",
+ "The hour after sunrise and before sunset gives you warm, soft, expensive-looking light — no color grading needed. Check your local sunset time, plan one shoot around it this week, and watch your footage level up.",
+ "#ContentCreatorTips #BudgetContentCreation #ContentCreation",
+ "Carousel: golden hour vs. midday shot comparison + local sunset time tip"),
+("2026-10-19", "Work Smarter", "Bloopers are content, not waste",
+ "That take where you fumbled the line? Post it. Audiences trust creators who feel real more than creators who feel perfect. Your \"mistakes\" folder might be your most relatable content yet.",
+ "#AuthenticCreator #CreatorLife #ContentHacks",
+ "TikTok: quick blooper reel with \"post the bloopers\" text overlay"),
+("2026-10-21", "Work Smarter", "One location, five angles, five posts",
+ "You don't need to travel for fresh content. Pick one spot — your kitchen counter, a corner of your room — and shoot it from five different angles and times of day. Same background, five completely different posts.",
+ "#ContentPlanning #SmallCreator #BudgetContentCreation",
+ "Carousel: 1 room, 5 labeled camera angles"),
+("2026-10-23", "Work Smarter", "Canva templates: design once, reuse forever",
+ "Build one branded template in Canva — your colors, your fonts, your logo — and duplicate it for every future post. What used to take an hour now takes five minutes.",
+ "#ContentCreation #FreeTools #CreatorTips",
+ "Screen-recording: duplicating a Canva template and swapping content in under a minute"),
+("2026-10-26", "Work Smarter", "Ask, don't guess: use polls",
+ "Before you spend an hour making a post, spend 10 seconds asking your audience what they actually want with a Stories poll. Resourceful creators let their community co-write the content calendar.",
+ "#CreatorCommunitySEA #ContentPlanning #CreatorTips",
+ "Stories-style graphic showing a poll sticker in use"),
+("2026-10-28", "Work Smarter", "Free stock footage & fonts to bookmark",
+ "Missing a b-roll shot or a font that fits your brand? Free libraries like Pexels, Pixabay, and Google Fonts exist so you never have to pay for a placeholder. Save this list for your next edit.",
+ "#FreeTools #ContentHacks #DigitalCreator",
+ "Static graphic: bookmark-style list of 3-4 free resource sites"),
+("2026-10-30", "Work Smarter", "Script fast with voice memos",
+ "Typing a script feels like work; talking one out loud doesn't. Open your voice memo app, ramble your idea for 60 seconds, then transcribe the best lines. It's the fastest first draft you'll ever write.",
+ "#ContentPlanning #CreatorTips #ContentCreation",
+ "Reel: phone screen recording a voice memo being turned into on-screen text"),
+("2026-11-02", "Grow With Community", "Collab with a fellow small creator",
+ "You don't need a huge following to collaborate — you need a creator whose audience overlaps with yours. Duet, guest-feature, or shout each other out. Two small audiences combined can outgrow one big one.",
+ "#CreatorCommunitySEA #CreatorGrowth #SEACreators",
+ "Carousel: \"How to pitch a collab in one DM\" with a sample message"),
+("2026-11-04", "Grow With Community", "Repost your community, credit always",
+ "Your followers are already making content about you — a review, a reaction, a remix. Reposting it (with credit) builds trust and fills your feed without filming a single new thing.",
+ "#CreatorCommunitySEA #ContentHacks #AuthenticCreator",
+ "Static graphic: UGC repost example with credit tag callout"),
+("2026-11-06", "Grow With Community", "Reply to every comment for a week",
+ "Try this for seven days: reply to every single comment you get, even a one-word one. Platforms reward conversation, and your community remembers who actually shows up. Report back — we want to hear what changed.",
+ "#CreatorCommunitySEA #CreatorGrowth #CreatorTips",
+ "Reel: creator visibly replying to comments, on-screen challenge text"),
+("2026-11-09", "Grow With Community", "\"Day in the life\" = low effort, high connection",
+ "No script, no set, no budget — just your actual day. \"Day in the life\" content consistently outperforms polished posts because people follow people, not production value.",
+ "#ContentHacks #AuthenticCreator #CreatorLife",
+ "Vlog-style Reel/TikTok template: 4-5 unscripted moments from the day"),
+("2026-11-11", "Grow With Community", "Build a media kit before you pitch",
+ "You don't need an agency to look professional to a brand — you need one clean page: who you are, your numbers, your rates, your past work. A free Canva template gets you there in an hour.",
+ "#CreatorEconomy #InfluencerTips #CreatorTips",
+ "Carousel: anatomy of a simple 1-page media kit"),
+("2026-11-13", "Grow With Community", "Turn your FAQs into content pillars",
+ "The questions your audience keeps asking you in DMs are your best-performing posts, waiting to be made. Keep a running list and turn each one into its own piece of content.",
+ "#ContentPlanning #ContentCreatorTips #CreatorCommunitySEA",
+ "Carousel: 3 real FAQs turned into 3 post formats"),
+("2026-11-16", "Grow With Community", "Free scheduling = consistency without burnout",
+ "Posting three times a week doesn't mean thinking about content three times a week. Free schedulers let you batch-plan a month in one sitting, then go live on your day off. Consistency, automated.",
+ "#ContentPlanning #FreeTools #CreatorLife",
+ "Screen-recording: a week of posts scheduled in one sitting"),
+("2026-11-18", "Grow With Community", "10 minutes of free analytics a week",
+ "Every platform gives you free performance data — you just have to look. Ten minutes a week spotting your top post tells you exactly what to make more of. No guesswork, no paid tools required.",
+ "#CreatorGrowth #ContentPlanning #DigitalCreator",
+ "Carousel: how to read your native analytics tab in 3 steps"),
+("2026-11-20", "Grow With Community", "Turn a blog or listicle into a carousel",
+ "That article you wrote (or read) is already a content outline. Break it into 5-7 slides, one point per slide, and you've got a shareable carousel without writing a single new idea.",
+ "#ContentRepurposing #ContentCreation #CreatorTips",
+ "Carousel: 1 blog post title broken into slide-by-slide points"),
+("2026-11-23", "Grow With Community", "Use AI as a brainstorm partner, not your voice",
+ "AI tools are great for breaking a creative block — ideas, outlines, caption drafts. But your voice, your story, and your face are what make people stay. Use the shortcut, keep the authenticity.",
+ "#ContentCreatorTips #DigitalCreator #CreatorTips",
+ "Static graphic: \"AI for ideas, you for the delivery\""),
+("2026-11-25", "Grow With Community", "Free hashtag research, straight from the app",
+ "You don't need a paid hashtag tool — type your topic into the app's own search bar and see what auto-populates. That's real-time data on what people are actually searching, for free.",
+ "#ContentHacks #CreatorGrowth #FreeTools",
+ "Screen-recording: searching a topic and screenshotting suggested tags"),
+("2026-11-27", "Grow With Community", "A gratitude post for your community",
+ "Every follower, comment, and share got you here. Take one post this week to say thank you — no tips, no hacks, just appreciation. Community-first is still a growth strategy.",
+ "#CreatorCommunitySEA #AuthenticCreator #YouthsToday",
+ "Simple text-on-photo graphic: a genuine thank-you message"),
+("2026-11-30", "Grow With Community", "Audit your last 10 posts",
+ "Once a month, look back at your last 10 posts and sort them: keep doing, tweak, or drop. Resourceful creators don't chase every trend — they double down on what's already proven to work for them.",
+ "#ContentPlanning #CreatorGrowth #ContentCreatorTips",
+ "Carousel: a simple keep/tweak/drop audit template"),
+("2026-12-02", "Plan Ahead & Level Up", "Repurpose last year's festive content",
+ "You don't have to reinvent your holiday content from scratch. Pull last December's top-performing post, update the details, and repost. What worked once is allowed to work twice.",
+ "#ContentRepurposing #ContentPlanning #CreatorTips",
+ "Before/after: last year's festive post vs. this year's refreshed version"),
+("2026-12-04", "Plan Ahead & Level Up", "Free background removal, cleaner shots",
+ "Messy background in an otherwise great shot? Free background-removal apps clean it up in seconds — no studio backdrop required. Your product or portrait photos just got a free upgrade.",
+ "#FreeTools #ContentHacks #ContentCreation",
+ "Before/after graphic: cluttered background vs. cleaned-up shot"),
+("2026-12-07", "Plan Ahead & Level Up", "Build a resource list your audience saves",
+ "The posts that get saved (not just liked) are the ones people plan to come back to. A curated \"free tools\" or \"resources for creators\" list is exactly that kind of save-worthy post.",
+ "#ContentCreatorTips #FreeTools #CreatorCommunitySEA",
+ "Carousel: a full \"resourceful creator toolkit\" resource list"),
+("2026-12-09", "Plan Ahead & Level Up", "Free stickers = free engagement",
+ "Countdown, quiz, and \"this or that\" stickers are built into your Stories for free — and they're some of the highest-engagement formats available. If you're not using them weekly, you're leaving easy interaction on the table.",
+ "#ContentHacks #CreatorGrowth #CreatorTips",
+ "Stories-style graphic demoing 2-3 interactive stickers"),
+("2026-12-11", "Plan Ahead & Level Up", "Negotiate brand deals with confidence",
+ "Know your numbers, know your worth, and put it on paper before you say yes. A short one-pager (your media kit) turns a nervous negotiation into a professional conversation.",
+ "#CreatorEconomy #InfluencerTips #CreatorGrowth",
+ "Carousel: 3 phrases to use when a brand asks for your rate"),
+("2026-12-14", "Plan Ahead & Level Up", "Batch your festive content early",
+ "December gets busy fast. Film your festive-season content now, while you still have a quiet afternoon, so you're not scrambling to shoot on the actual holiday. Future-you is already saying thank you.",
+ "#ContentPlanning #CreatorLife #ContentCreatorTips",
+ "Carousel: a simple festive-content batch-shoot checklist"),
+("2026-12-16", "Plan Ahead & Level Up", "Constraints breed creativity",
+ "No budget, no studio, no team — and some of the best content ever made came from exactly those limits. Being resourceful isn't a workaround for creativity. It IS the creativity.",
+ "#ResourcefulCreator #CreatorLife #AuthenticCreator",
+ "Bold quote graphic on brand colors"),
+("2026-12-18", "Plan Ahead & Level Up", "Turn client feedback into a case study",
+ "The results you got a brand or client are proof, not just a private win. Package the before/after into a short case-study post — it's some of the most convincing content you can make for your next pitch.",
+ "#CreatorEconomy #ContentCreatorTips #InfluencerTips",
+ "Carousel: a simple before/after/result case-study template"),
+("2026-12-21", "Plan Ahead & Level Up", "Your top 3 lessons this year",
+ "Before the year wraps, name the three things that actually moved the needle for your content in 2026. Writing it down turns a year of trial-and-error into a plan for next year.",
+ "#CreatorGrowth #ContentPlanning #CreatorLife",
+ "Static graphic or Reel: \"3 things I learned as a creator this year\""),
+("2026-12-23", "Plan Ahead & Level Up", "Low-budget festive content ideas",
+ "You don't need a photoshoot to feel festive — fairy lights, a warm filter, and a cozy corner of your home do the job. Resourceful, seasonal, and done in twenty minutes.",
+ "#BudgetContentCreation #ContentHacks #ContentCreation",
+ "Carousel: 3 low-budget festive setup ideas"),
+("2026-12-25", "Plan Ahead & Level Up", "A thank-you note for the year",
+ "However you're spending today, thank you for creating alongside us this year. Here's to more resourceful, community-first content in the year ahead.",
+ "#YouthsToday #CreatorCommunitySEA #ResourcefulCreator",
+ "Warm, simple festive graphic — brand colors, minimal text"),
+("2026-12-28", "Plan Ahead & Level Up", "Set your 2027 content goals",
+ "Not resolutions — resourceful goals. Pick one platform to grow, one skill to build, and one habit to keep. Small, specific, and doable beats big and vague every time.",
+ "#ContentPlanning #CreatorGrowth #CreatorTips",
+ "Carousel: a simple 3-goal planning template for the new year"),
+("2026-12-30", "Plan Ahead & Level Up", "Everything we covered this year, in one post",
+ "One phone, one window of light, one stack of books, and a whole lot of resourcefulness — that's what this series has been about. Save this post as your cheat sheet for 2027.",
+ "#ResourcefulCreator #YouthsToday #ContentCreatorTips",
+ "Carousel recap: 1 tile per month theme (Sept-Dec), \"save this\" CTA"),
+]
+
+assert len(POSTS) == 44, f"Expected 44 posts, got {len(POSTS)}"
+
+import os
+IMG_DIR = os.path.join(os.path.dirname(__file__), "..", "images")
+
+entries = []
+for date_s, theme, title, caption, tags, fmt in POSTS:
+    full_caption = f"{caption}\n\n{BASE_TAGS} {tags}"
+    img_name = f"{date_s}.jpg"
+    has_image = os.path.exists(os.path.join(IMG_DIR, img_name))
+    entries.append({
+        "date": date_s,
+        "theme": theme,
+        "title": title,
+        "caption": full_caption,
+        "image": img_name,
+        "has_image": has_image,
+        "posted": {"instagram": False, "facebook": False},
+    })
+
+out_path = os.path.join(os.path.dirname(__file__), "..", "data", "posts.json")
+with open(out_path, "w") as f:
+    json.dump(entries, f, indent=2)
+
+ready = sum(1 for e in entries if e["has_image"])
+print(f"Wrote {len(entries)} posts to {out_path}")
+print(f"{ready} of {len(entries)} already have a graphic in images/; the rest need one added before their date.")

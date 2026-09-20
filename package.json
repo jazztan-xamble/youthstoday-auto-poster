@@ -1,0 +1,14 @@
+{
+  "name": "youthstoday-auto-poster",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Automated Instagram + Facebook posting for YouthsToday via the Meta Graph API, run on a GitHub Actions schedule.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "post": "node scripts/post.js",
+    "post:dry-run": "node scripts/post.js --dry-run",
+    "build-data": "python3 scripts/build_posts_json.py"
+  }
+}
