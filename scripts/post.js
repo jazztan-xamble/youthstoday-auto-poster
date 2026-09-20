@@ -63,7 +63,7 @@ function requireEnv(name) {
   if (!val) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
-  return val;
+  return val.trim();
 }
 
 async function graphPost(pathSegment, params) {
