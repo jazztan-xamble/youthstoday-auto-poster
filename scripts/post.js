@@ -14,6 +14,7 @@
  *
  * Required environment variables (set as GitHub Actions repo secrets, never
  * committed to the repo and never pasted into chat):
+ *   META_IG_ACCESS_TOKEN     - Instagram access token (from Instagram Business Login)
  *   META_PAGE_ACCESS_TOKEN   - long-lived Facebook Page access token
  *   META_PAGE_ID             - Facebook Page ID
  *   META_IG_USER_ID          - Instagram Business Account ID (linked to the Page)
@@ -137,6 +138,7 @@ async function main() {
     return;
   }
 
+const igAccessToken = requireEnv("META_IG_ACCESS_TOKEN");
   const pageAccessToken = requireEnv("META_PAGE_ACCESS_TOKEN");
   const pageId = requireEnv("META_PAGE_ID");
   const igUserId = requireEnv("META_IG_USER_ID");
@@ -148,7 +150,7 @@ async function main() {
     try {
       igResult = await postToInstagram({
         igUserId,
-        accessToken: pageAccessToken,
+        accessToken: igAccessToken,
         imageUrl,
         caption: entry.caption,
       });
