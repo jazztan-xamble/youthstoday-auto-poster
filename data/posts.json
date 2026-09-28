@@ -43,8 +43,8 @@
     "image": "2026-09-28.jpg",
     "has_image": true,
     "posted": {
-      "instagram": false,
-      "facebook": false
+      "instagram": true,
+      "facebook": true
     }
   },
   {
