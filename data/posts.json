@@ -79,8 +79,8 @@
     "image": "2026-10-05.jpg",
     "has_image": true,
     "posted": {
-      "instagram": false,
-      "facebook": false
+      "instagram": true,
+      "facebook": true
     }
   },
   {
