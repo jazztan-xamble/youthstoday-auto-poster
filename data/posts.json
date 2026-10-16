@@ -139,8 +139,8 @@
     "image": "2026-10-16.jpg",
     "has_image": true,
     "posted": {
-      "instagram": false,
-      "facebook": false
+      "instagram": true,
+      "facebook": true
     }
   },
   {
